@@ -158,6 +158,155 @@ class TestExcelize(unittest.TestCase):
         self.assertIsNone(f.save_as(os.path.join("test", "TestAppProps.xlsx")))
         self.assertIsNone(f.close())
 
+    def test_data_validation(self):
+        f = excelize.new_file()
+        dv = excelize.new_data_validation(True)
+        dv.sqref = "A1:B1"
+        self.assertIsNone(
+            dv.set_range(
+                10,
+                20,
+                excelize.DataValidationType.DataValidationTypeWhole,
+                excelize.DataValidationOperator.DataValidationOperatorBetween,
+            )
+        )
+        self.assertIsNone(
+            dv.set_error(
+                excelize.DataValidationErrorStyle.DataValidationErrorStyleStop,
+                "error title",
+                "error body",
+            )
+        )
+        self.assertIsNone(
+            dv.set_error(
+                excelize.DataValidationErrorStyle.DataValidationErrorStyleWarning,
+                "error title",
+                "error body",
+            )
+        )
+        self.assertIsNone(
+            dv.set_error(
+                excelize.DataValidationErrorStyle.DataValidationErrorStyleInformation,
+                "error title",
+                "error body",
+            )
+        )
+        self.assertIsNone(f.add_data_validation("Sheet1", dv))
+
+        f.new_sheet("Sheet2")
+        self.assertEqual(f.get_data_validations("Sheet2"), [])
+        self.assertIsNone(f.set_sheet_row("Sheet2", "A2", ["B2", 1]))
+        self.assertIsNone(f.set_sheet_row("Sheet2", "A3", ["B3", 3]))
+        dv = excelize.new_data_validation(True)
+        dv.sqref = "A1:B1"
+        self.assertIsNone(
+            dv.set_range(
+                "INDIRECT($A$2)",
+                "INDIRECT($A$3)",
+                excelize.DataValidationType.DataValidationTypeWhole,
+                excelize.DataValidationOperator.DataValidationOperatorBetween,
+            )
+        )
+        self.assertIsNone(
+            dv.set_error(
+                excelize.DataValidationErrorStyle.DataValidationErrorStyleStop,
+                "error title",
+                "error body",
+            )
+        )
+        self.assertIsNone(f.add_data_validation("Sheet2", dv))
+        dvs = f.get_data_validations("Sheet2")
+        self.assertEqual(len(dvs), 1)
+        self.assertEqual(dvs[0].sqref, "A1:B1")
+        self.assertEqual(dvs[0].type, "whole")
+        self.assertEqual(dvs[0].operator, "between")
+
+        dv = excelize.new_data_validation(True)
+        dv.sqref = "A3:B3"
+        self.assertIsNone(
+            dv.set_range(
+                10,
+                20,
+                excelize.DataValidationType.DataValidationTypeWhole,
+                excelize.DataValidationOperator.DataValidationOperatorGreaterThan,
+            )
+        )
+        with self.assertRaises(TypeError) as context:
+            dv.set_range(
+                None,
+                20,
+                excelize.DataValidationType.DataValidationTypeWhole,
+                excelize.DataValidationOperator.DataValidationOperatorGreaterThan,
+            )
+        self.assertEqual(str(context.exception), "parameter is invalid")
+        with self.assertRaises(RuntimeError) as context:
+            dv.set_range(
+                1.7976931348623157e308,
+                20,
+                excelize.DataValidationType.DataValidationTypeWhole,
+                excelize.DataValidationOperator.DataValidationOperatorGreaterThan,
+            )
+        self.assertEqual(str(context.exception), "data validation range exceeds limit")
+        self.assertIsNone(dv.set_input("input title", "input body"))
+        self.assertIsNone(f.add_data_validation("Sheet1", dv))
+
+        dv = excelize.new_data_validation(True)
+        dv.sqref = "A4:B4"
+        self.assertIsNone(
+            dv.set_range(
+                0.2,
+                0.8,
+                excelize.DataValidationType.DataValidationTypeWhole,
+                excelize.DataValidationOperator.DataValidationOperatorGreaterThan,
+            )
+        )
+        self.assertIsNone(dv.set_input("input title", "input body"))
+        self.assertIsNone(f.add_data_validation("Sheet1", dv))
+
+        dv = excelize.new_data_validation(True)
+        dv.sqref = "A5:B6"
+        self.assertIsNone(dv.set_drop_list(["1", "2", "3"]))
+        with self.assertRaises(RuntimeError) as context:
+            dv.set_drop_list([""] * 258)
+        self.assertEqual(
+            str(context.exception),
+            "data validation must be 0-255 characters",
+        )
+        self.assertIsNone(f.add_data_validation("Sheet1", dv))
+
+        dv = excelize.new_data_validation(True)
+        self.assertIsNone(f.set_cell_value("Sheet1", "E1", "E1"))
+        self.assertIsNone(f.set_cell_value("Sheet1", "E2", "E2"))
+        self.assertIsNone(f.set_cell_value("Sheet1", "E3", "E3"))
+        self.assertIsNone(dv.set_sqref("A7:B8"))
+        self.assertIsNone(dv.set_sqref("A7:B8"))
+        self.assertIsNone(dv.set_sqref_drop_list("$E$1:$E$3"))
+        self.assertIsNone(f.add_data_validation("Sheet1", dv))
+
+        dv = excelize.new_data_validation(True)
+        dv.sqref = "A9"
+        self.assertIsNone(dv.set_drop_list(["1", "2", "3"]))
+        self.assertIsNone(dv.set_drop_list(["=E1"]))
+        self.assertIsNone(f.add_data_validation("Sheet1", dv))
+
+        with self.assertRaises(TypeError) as context:
+            f.add_data_validation("Sheet1", None)
+        self.assertEqual(
+            str(context.exception),
+            "expected type DataValidation for argument 'dv', but got NoneType",
+        )
+
+        with self.assertRaises(RuntimeError) as context:
+            f.get_data_validations("SheetN")
+        self.assertEqual(str(context.exception), "sheet SheetN does not exist")
+        with self.assertRaises(TypeError) as context:
+            f.get_data_validations(1)
+        self.assertEqual(
+            str(context.exception),
+            "expected type str for argument 'sheet', but got int",
+        )
+        self.assertIsNone(f.save_as(os.path.join("test", "TestDataValidation.xlsx")))
+
     def test_default_font(self):
         f = excelize.new_file()
         font_name = "Arial"
@@ -1012,6 +1161,9 @@ class TestExcelize(unittest.TestCase):
         f.file_index = 100
         expected = "can not find file pointer"
         with self.assertRaises(RuntimeError) as context:
+            f.add_data_validation("Sheet1", excelize.DataValidation())
+        self.assertEqual(str(context.exception), expected)
+        with self.assertRaises(RuntimeError) as context:
             f.add_vba_project("".encode("utf-8"))
         self.assertEqual(str(context.exception), expected)
         with self.assertRaises(TypeError) as context:
@@ -1042,6 +1194,9 @@ class TestExcelize(unittest.TestCase):
         self.assertEqual(str(context.exception), expected)
         with self.assertRaises(RuntimeError) as context:
             f.set_custom_props(excelize.CustomProperty(name="Prop", value=""))
+        self.assertEqual(str(context.exception), expected)
+        with self.assertRaises(RuntimeError) as context:
+            f.get_data_validations("Sheet1")
         self.assertEqual(str(context.exception), expected)
         with self.assertRaises(RuntimeError) as context:
             f.get_default_font()

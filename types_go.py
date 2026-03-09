@@ -96,6 +96,25 @@ class _Cell(Structure):
     ]
 
 
+class _DataValidation(Structure):
+    _fields_ = [
+        ("AllowBlank", c_bool),
+        ("Error", POINTER(c_char_p)),
+        ("ErrorStyle", POINTER(c_char_p)),
+        ("ErrorTitle", POINTER(c_char_p)),
+        ("Operator", c_char_p),
+        ("Prompt", POINTER(c_char_p)),
+        ("PromptTitle", POINTER(c_char_p)),
+        ("ShowDropDown", c_bool),
+        ("ShowErrorMessage", c_bool),
+        ("ShowInputMessage", c_bool),
+        ("Sqref", c_char_p),
+        ("Type", c_char_p),
+        ("Formula1", c_char_p),
+        ("Formula2", c_char_p),
+    ]
+
+
 class _DocProperties(Structure):
     _fields_ = [
         ("Category", c_char_p),
@@ -855,6 +874,14 @@ class _GetCellRichTextResult(Structure):
     _fields_ = [
         ("RunsLen", c_int),
         ("Runs", POINTER(_RichTextRun)),
+        ("Err", c_char_p),
+    ]
+
+
+class _GetDataValidationsResult(Structure):
+    _fields_ = [
+        ("DvsLen", c_int),
+        ("Dvs", POINTER(_DataValidation)),
         ("Err", c_char_p),
     ]
 

@@ -504,38 +504,6 @@ def c_value_to_py_interface(c_value):
     raise TypeError(f"unsupported interface type code: {c_value.Type}")
 
 
-def prepare_args(args: List, types: List[argsRule]):
-    """
-    Validate arguments against expected types.
-
-    Args:
-        args (List): The arguments to validate.
-        types (List[argsRule]): The expected argument rules.
-
-    Raises:
-        TypeError: If an argument type doesn't match the expected types.
-    """
-    if not types:
-        return
-    opts = types[-1].opts if types else False
-    for i, excepted in enumerate(types):
-        if opts and i >= len(args):
-            return
-        if i >= len(args):
-            continue
-        received = type(args[i])
-        if received not in excepted.types:
-            names = [t.__name__ for t in excepted.types]
-            if len(names) == 1:
-                t = names[0]
-            else:
-                t = ", ".join(names[:-1]) + f" or {names[-1]}"
-            raise TypeError(
-                f"expected type {t} for argument "
-                f"'{excepted.name}', but got {received.__name__}"
-            )
-
-
 class MergeCell:
     """
     MergeCell define a merged cell data. It consists of the following structure.
@@ -602,7 +570,7 @@ class Rows:
         rows in the tail of the worksheet.
 
         Args:
-            *opts (Options): Optional parameters for get column cells value.
+            *opts (Options): Optional parameters for get column cells value
 
         Returns:
             List[str]: Return the current row's column values if no error
@@ -1581,6 +1549,89 @@ class File:
         lib.AddComment.restype = c_char_p
         options = py_value_to_c(opts, types_go._Comment())
         err = lib.AddComment(
+            self.file_index, sheet.encode(ENCODE), byref(options)
+        ).decode(ENCODE)
+        if err != "":
+            raise RuntimeError(err)
+
+    def add_data_validation(self, sheet: str, dv: DataValidation) -> None:
+        """
+        Set data validation on a range of the worksheet by given data validation
+        object and worksheet name. The data validation object can be created by
+        `new_data_validation` function.
+
+        Args:
+            sheet (str): The worksheet name
+            dv (DataValidation): The data validation options
+
+        Returns:
+            None: Return None if no error occurred, otherwise raise a
+            RuntimeError with the message.
+
+        Example:
+            Example 1, set data validation on Sheet1!A1:B2 with validation
+            criteria settings, show error alert after invalid data is entered
+            with "Stop" style and custom title "error body":
+
+            ```python
+            try:
+                dv = excelize.new_data_validation(True)
+                dv.sqref = "A1:B2"
+                dv.set_range(
+                    10,
+                    20,
+                    excelize.DataValidationType.DataValidationTypeWhole,
+                    excelize.DataValidationOperator.DataValidationOperatorBetween,
+                )
+                dv.set_error(
+                    excelize.DataValidationErrorStyle.DataValidationErrorStyleStop,
+                    "error title",
+                    "error body",
+                )
+                f.add_data_validation("Sheet1", dv)
+            except (RuntimeError, TypeError) as err:
+                print(err)
+            ```
+
+            Example 2, set data validation on Sheet1!A3:B4 with validation
+            criteria settings, and show input message when cell is selected:
+
+            ```python
+            try:
+                dv = excelize.new_data_validation(True)
+                dv.sqref = "A3:B4"
+                dv.set_range(
+                    10,
+                    20,
+                    excelize.DataValidationType.DataValidationTypeWhole,
+                    excelize.DataValidationOperator.DataValidationOperatorGreaterThan,
+                )
+                dv.set_input("input title", "input body")
+                f.add_data_validation("Sheet1", dv)
+            except (RuntimeError, TypeError) as err:
+                print(err)
+            ```
+
+            Example 3, set data validation on Sheet1!A5:B6 with validation
+            criteria settings, create in-cell dropdown by allowing list source:
+
+            ```python
+            try:
+                dv = excelize.new_data_validation(True)
+                dv.sqref = "A5:B6"
+                dv.set_drop_list(["1", "2", "3"])
+                f.add_data_validation("Sheet1", dv)
+            except (RuntimeError, TypeError) as err:
+                print(err)
+            ```
+        """
+        prepare_args(
+            [sheet, dv],
+            [argsRule("sheet", [str]), argsRule("dv", [DataValidation])],
+        )
+        lib.AddDataValidation.restype = c_char_p
+        options = py_value_to_c(dv, types_go._DataValidation())
+        err = lib.AddDataValidation(
             self.file_index, sheet.encode(ENCODE), byref(options)
         ).decode(ENCODE)
         if err != "":
@@ -3302,6 +3353,26 @@ class File:
                         )
                     )
             return arr
+        raise RuntimeError(err)
+
+    def get_data_validations(self, sheet: str) -> List[DataValidation]:
+        """
+        Get data validations of a worksheet by given worksheet name.
+
+        Args:
+            sheet (str): The worksheet name
+
+        Returns:
+            List[DataValidation]: Return data validations if no error occurred,
+            otherwise raise a RuntimeError with the message.
+        """
+        prepare_args([sheet], [argsRule("sheet", [str])])
+        lib.GetDataValidations.restype = types_go._GetDataValidationsResult
+        res = lib.GetDataValidations(self.file_index, sheet.encode(ENCODE))
+        dvs = c_value_to_py(res, GetDataValidationsResult()).dvs
+        err = res.Err.decode(ENCODE)
+        if not err:
+            return dvs if dvs else []
         raise RuntimeError(err)
 
     def get_default_font(self) -> str:
@@ -6875,6 +6946,19 @@ def open_reader(buffer: bytes, *opts: Options) -> Optional[File]:
     if err == "":
         return File(res.val)
     raise RuntimeError(err)
+
+
+def new_data_validation(allow_blank: bool) -> DataValidation:
+    """
+    Create a new data validation object.
+
+    Args:
+        allow_blank (bool): Whether to allow blank values.
+
+    Returns:
+        DataValidation: A new data validation object.
+    """
+    return DataValidation(allow_blank=allow_blank)
 
 
 def split_cell_name(cell: str) -> Tuple[str, int]:

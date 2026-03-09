@@ -125,6 +125,24 @@ struct Cell
     struct Interface Value;
 };
 
+// DataValidation directly maps the settings of the data validation rule.
+struct DataValidation {
+	bool AllowBlank;
+	char **Error;
+	char **ErrorStyle;
+	char **ErrorTitle;
+	char *Operator;
+	char **Prompt;
+	char **PromptTitle;
+	bool ShowDropDown;
+	bool ShowErrorMessage;
+	bool ShowInputMessage;
+	char *Sqref;
+	char *Type;
+	char *Formula1;
+	char *Formula2;
+};
+
 // DocProperties directly maps the document core properties.
 struct DocProperties
 {
@@ -877,6 +895,13 @@ struct GetCellRichTextResult
 {
     int RunsLen;
     struct RichTextRun *Runs;
+    char *Err;
+};
+
+struct GetDataValidationsResult
+{
+    int DvsLen;
+    struct DataValidation *Dvs;
     char *Err;
 };
 
