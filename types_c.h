@@ -442,11 +442,35 @@ struct FormControl
     struct GraphicOptions Format;
 };
 
+// LineOptions directly maps the format settings of the line.
+struct LineOptions
+{
+    unsigned char Type;
+    unsigned char Dash;
+    struct Fill Fill;
+    bool Smooth;
+    double Width;
+};
+
 // ChartNumFmt directly maps the number format settings of the chart.
 struct ChartNumFmt
 {
     char *CustomNumFmt;
     bool SourceLinked;
+};
+
+// ChartTitle directly maps the format settings of the chart title.
+struct ChartTitle
+{
+    struct Fill Fill;
+    struct LineOptions Border;
+    int ParagraphLen;
+    struct RichTextRun *Paragraph;
+    int OffsetX;
+    int OffsetY;
+    int Width;
+    int Height;
+    bool Overlay;
 };
 
 // ChartAxis directly maps the format settings of the chart axis.
@@ -468,8 +492,7 @@ struct ChartAxis
     struct Font Font;
     double LogBase;
     struct ChartNumFmt NumFmt;
-    int TitleLen;
-    struct RichTextRun *Title;
+    struct ChartTitle Title;
 };
 
 // ChartDataLabel directly maps the format settings of the chart labels.
@@ -487,22 +510,12 @@ struct ChartDimension
     unsigned int Height;
 };
 
-// ChartLine directly maps the format settings of the chart line.
-struct ChartLine
-{
-    unsigned char Type;
-    unsigned char Dash;
-    struct Fill Fill;
-    bool Smooth;
-    double Width;
-};
-
 // ChartUpDownBar directly maps the format settings of the stock chart up bars
 // and down bars.
 struct ChartUpDownBar
 {
     struct Fill Fill;
-    struct ChartLine Border;
+    struct LineOptions Border;
 };
 
 // ChartPlotArea directly maps the format settings of the plot area.
@@ -534,7 +547,7 @@ struct ChartLegend
 // ChartMarker directly maps the format settings of the chart marker.
 struct ChartMarker
 {
-    struct ChartLine Border;
+    struct LineOptions Border;
     struct Fill Fill;
     char *Symbol;
     int Size;
@@ -557,7 +570,7 @@ struct ChartSeries
     char *Sizes;
     struct Fill Fill;
     struct ChartLegend Legend;
-    struct ChartLine Line;
+    struct LineOptions Line;
     struct ChartMarker Marker;
     struct ChartDataLabel DataLabel;
     unsigned char DataLabelPosition;
@@ -574,14 +587,13 @@ struct Chart
     struct GraphicOptions Format;
     struct ChartDimension Dimension;
     struct ChartLegend Legend;
-    int TitleLen;
-    struct RichTextRun *Title;
+    struct ChartTitle Title;
     bool *VaryColors;
     struct ChartAxis XAxis;
     struct ChartAxis YAxis;
     struct ChartPlotArea PlotArea;
     struct Fill Fill;
-    struct ChartLine Border;
+    struct LineOptions Border;
     char *ShowBlanksAs;
     int BubbleSize;
     int HoleSize;
@@ -601,6 +613,8 @@ struct PivotTableField
     char *Subtotal;
     bool DefaultSubtotal;
     int NumFmt;
+    int SelectedItemsLen;
+    char **SelectedItems;
 };
 
 // PivotTableOptions directly maps the format settings of the pivot table.
@@ -636,13 +650,6 @@ struct PivotTableOptions
     char *PivotTableStyleName;
 };
 
-// ShapeLine directly maps the line settings of the shape.
-struct ShapeLine
-{
-    char *Color;
-    double *Width;
-};
-
 // Shape directly maps the format settings of the shape.
 struct Shape
 {
@@ -653,7 +660,7 @@ struct Shape
     unsigned int Height;
     struct GraphicOptions Format;
     struct Fill Fill;
-    struct ShapeLine Line;
+    struct LineOptions Line;
     int ParagraphLen;
     struct RichTextRun *Paragraph;
 };
@@ -717,6 +724,8 @@ struct SlicerOptions
     bool *DisplayHeader;
     bool ItemDesc;
     struct GraphicOptions Format;
+    int SelectedItemsLen;
+    char **SelectedItems;
 };
 
 // SparklineOptions directly maps the settings of the sparkline.

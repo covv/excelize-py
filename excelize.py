@@ -231,7 +231,7 @@ def c_value_to_py(ctypes_instance, py_instance):
                     py_list = []
                     l = getattr(ctypes_instance, c_field_name + "Len")
                     c_array = getattr(ctypes_instance, c_field_name)
-                    if c_array:
+                    if c_array and l:
                         if is_py_primitive_type(get_args(py_field_args[0])[0]):
                             # The Go basic data type array, for example: []string
                             for i in range(l):
@@ -256,7 +256,7 @@ def c_value_to_py(ctypes_instance, py_instance):
                     py_list = []
                     l = getattr(ctypes_instance, c_field_name + "Len")
                     c_array = getattr(ctypes_instance, c_field_name)
-                    if c_array:
+                    if c_array and l:
                         if is_py_primitive_type(
                             get_args(get_args(py_field_args[0])[0])[0]
                         ):
@@ -1355,7 +1355,13 @@ class File:
                             values="Sheet1!$B$4:$D$4",
                         ),
                     ],
-                    title=[excelize.RichTextRun(text="Fruit 3D Clustered Column Chart")],
+                    title=excelize.ChartTitle(
+                        paragraph=[
+                            excelize.RichTextRun(
+                                text="Fruit 3D Clustered Column Chart",
+                            )
+                        ],
+                    ),
                 )
                 f.add_chart("Sheet1", "E1", chart)
                 # Save spreadsheet by the given path.
@@ -1408,11 +1414,13 @@ class File:
                             lock_aspect_ratio=False,
                             locked=False,
                         ),
-                        title=[
-                            excelize.RichTextRun(
-                                text="Clustered Column - Line Chart",
-                            )
-                        ],
+                        title=excelize.ChartTitle(
+                            paragraph=[
+                                excelize.RichTextRun(
+                                    text="Clustered Column - Line Chart",
+                                )
+                            ],
+                        ),
                         legend=excelize.ChartLegend(position="left"),
                         plot_area=excelize.ChartPlotArea(
                             show_cat_name=False,
@@ -2012,12 +2020,11 @@ class File:
 
         Example:
             For example, create a pivot table on the range reference
-            Sheet1!G2:M34 with the range reference Sheet1!A1:E31 as the data
-            source, summarize by sum for sales:
+            Sheet1!G4:M31 with the range reference Sheet1!A1:E31 as the data
+            source, summarize by sum for revenue:
 
             ```python
             import excelize
-            import random
 
             f = excelize.new_file()
             month = [
@@ -2026,20 +2033,21 @@ class File:
             ]
             year = [2017, 2018, 2019]
             types = ["Meat", "Dairy", "Beverages", "Produce"]
+            revenue = [3217, 4512, 3891, 4738, 3054, 4265, 3643, 4901, 3378, 4126]
             region = ["East", "West", "North", "South"]
             try:
-                f.set_sheet_row("Sheet1", "A1", ["Month", "Year", "Type", "Sales", "Region"])
+                f.set_sheet_row("Sheet1", "A1", ["Month", "Year", "Type", "Revenue", "Region"])
                 for row in range(2, 32):
-                    f.set_cell_value("Sheet1", f"A{row}", month[random.randrange(12)])
-                    f.set_cell_value("Sheet1", f"B{row}", year[random.randrange(3)])
-                    f.set_cell_value("Sheet1", f"C{row}", types[random.randrange(4)])
-                    f.set_cell_value("Sheet1", f"D{row}", random.randrange(5000))
-                    f.set_cell_value("Sheet1", f"E{row}", region[random.randrange(4)])
+                    f.set_cell_value("Sheet1", f"A{row}", month[(row - 2) % len(month)])
+                    f.set_cell_value("Sheet1", f"B{row}", year[(row - 2) % len(year)])
+                    f.set_cell_value("Sheet1", f"C{row}", types[(row - 2) % len(types)])
+                    f.set_cell_value("Sheet1", f"D{row}", revenue[(row - 2) % len(revenue)])
+                    f.set_cell_value("Sheet1", f"E{row}", region[(row - 2) % len(region)])
 
                 f.add_pivot_table(
                     excelize.PivotTableOptions(
                         data_range="Sheet1!A1:E31",
-                        pivot_table_range="Sheet1!G2:M34",
+                        pivot_table_range="Sheet1!G4:M31",
                         rows=[
                             excelize.PivotTableField(data="Month", default_subtotal=True),
                             excelize.PivotTableField(data="Year"),
@@ -2050,7 +2058,7 @@ class File:
                         ],
                         data=[
                             excelize.PivotTableField(
-                                data="Sales", name="Summarize", subtotal="Sum",
+                                data="Revenue", name="Summarize", subtotal="Sum",
                             )
                         ],
                         row_grand_totals=True,
@@ -2322,8 +2330,12 @@ class File:
                     excelize.Shape(
                         cell="G6",
                         type="rect",
-                        line=excelize.ShapeLine(
-                            color="4286F4",
+                        line=excelize.LineOptions(
+                            fill=excelize.Fill(
+                                type="pattern",
+                                color=["4286F4"],
+                                pattern=1,
+                            ),
                             width=1.2,
                         ),
                         fill=excelize.Fill(
@@ -2343,7 +2355,7 @@ class File:
                                 ),
                             )
                         ],
-                        width=80,
+                        width=180,
                         height=40,
                     ),
                 )

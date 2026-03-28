@@ -107,34 +107,34 @@ class FormControlType(IntEnum):
     FormControlScrollBar = 7
 
 
-class ChartDashType(IntEnum):
+class LineDashType(IntEnum):
     """
-    ChartDashType defines the currently supported chart dash types enumeration.
-    """
-
-    ChartDashUnset = 0
-    ChartDashSolid = 1
-    ChartDashDot = 2
-    ChartDashDash = 3
-    ChartDashLgDash = 4
-    ChartDashSashDot = 5
-    ChartDashLgDashDot = 6
-    ChartDashLgDashDotDot = 7
-    ChartDashSysDash = 8
-    ChartDashSysDot = 9
-    ChartDashSysDashDot = 10
-    ChartDashSysDashDotDot = 11
-
-
-class ChartLineType(IntEnum):
-    """
-    ChartLineType defines the currently supported chart line types enumeration.
+    LineDashType defines the currently supported line dash types enumeration.
     """
 
-    ChartLineUnset = 0
-    ChartLineSolid = 1
-    ChartLineNone = 2
-    ChartLineAutomatic = 3
+    LineDashUnset = 0
+    LineDashSolid = 1
+    LineDashDot = 2
+    LineDashDash = 3
+    LineDashLgDash = 4
+    LineDashSashDot = 5
+    LineDashLgDashDot = 6
+    LineDashLgDashDotDot = 7
+    LineDashSysDash = 8
+    LineDashSysDot = 9
+    LineDashSysDashDot = 10
+    LineDashSysDashDotDot = 11
+
+
+class LineType(IntEnum):
+    """
+    LineType defines the currently supported line types enumeration.
+    """
+
+    LineUnset = 0
+    LineSolid = 1
+    LineNone = 2
+    LineAutomatic = 3
 
 
 class ChartType(IntEnum):
@@ -858,9 +858,30 @@ class FormControl:
 
 
 @dataclass
+class LineOptions:
+    type: LineType = LineType.LineUnset
+    dash: LineDashType = LineDashType.LineDashUnset
+    fill: Fill = Fill
+    smooth: bool = False
+    width: float = 0
+
+
+@dataclass
 class ChartNumFmt:
     custom_num_fmt: str = ""
     source_linked: bool = False
+
+
+@dataclass
+class ChartTitle:
+    fill: Fill = Fill
+    border: LineOptions = LineOptions
+    paragraph: Optional[List[RichTextRun]] = None
+    offset_x: int = 0
+    offset_y: int = 0
+    width: int = 0
+    height: int = 0
+    overlay: bool = False
 
 
 @dataclass
@@ -883,7 +904,7 @@ class ChartAxis:
     font: Font = Font
     log_base: float = 0
     num_fmt: ChartNumFmt = ChartNumFmt
-    title: Optional[RichTextRun] = None
+    title: ChartTitle = ChartTitle
 
 
 @dataclass
@@ -900,18 +921,9 @@ class ChartDimension:
 
 
 @dataclass
-class ChartLine:
-    type: ChartLineType = ChartLineType.ChartLineUnset
-    dash: ChartDashType = ChartDashType.ChartDashUnset
-    fill: Fill = Fill
-    smooth: bool = False
-    width: float = 0
-
-
-@dataclass
 class ChartUpDownBar:
     fill: Fill = Fill
-    border: ChartLine = ChartLine
+    border: LineOptions = LineOptions
 
 
 @dataclass
@@ -940,7 +952,7 @@ class ChartLegend:
 
 @dataclass
 class ChartMarker:
-    border: ChartLine = ChartLine
+    border: LineOptions = LineOptions
     fill: Fill = Fill
     symbol: str = ""
     size: int = 0
@@ -960,7 +972,7 @@ class ChartSeries:
     sizes: str = ""
     fill: Fill = Fill
     legend: ChartLegend = ChartLegend
-    line: ChartLine = ChartLine
+    line: LineOptions = LineOptions
     marker: ChartMarker = ChartMarker
     data_label: ChartDataLabel = ChartDataLabel
     data_label_position: ChartDataLabelPositionType = (
@@ -976,13 +988,13 @@ class Chart:
     format: GraphicOptions = GraphicOptions
     dimension: ChartDimension = ChartDimension
     legend: ChartLegend = ChartLegend
-    title: Optional[List[RichTextRun]] = None
+    title: ChartTitle = ChartTitle
     vary_colors: Optional[bool] = None
     x_axis: ChartAxis = ChartAxis
     y_axis: ChartAxis = ChartAxis
     plot_area: ChartPlotArea = ChartPlotArea
     fill: Fill = Fill
-    border: ChartLine = ChartLine
+    border: LineOptions = LineOptions
     show_blanks_as: str = ""
     bubble_size: int = 0
     hole_size: int = 0
@@ -1001,6 +1013,7 @@ class PivotTableField:
     subtotal: str = ""
     default_subtotal: bool = False
     num_fmt: int = 0
+    selected_items: Optional[List[str]] = None
 
 
 @dataclass
@@ -1029,12 +1042,7 @@ class PivotTableOptions:
     field_print_titles: bool = False
     item_print_titles: bool = False
     pivot_table_style_name: str = ""
-
-
-@dataclass
-class ShapeLine:
-    color: str = ""
-    width: Optional[int] = None
+    selected_items: Optional[List[str]] = None
 
 
 @dataclass
@@ -1046,7 +1054,7 @@ class Shape:
     height: int = 0
     format: GraphicOptions = GraphicOptions
     fill: Fill = Fill
-    line: ShapeLine = ShapeLine
+    line: LineOptions = LineOptions
     paragraph: Optional[List[RichTextRun]] = None
 
 
@@ -1095,6 +1103,42 @@ class SheetProtectionOptions:
 
 @dataclass
 class SlicerOptions:
+    """
+    SlicerOptions directly maps the format settings of the slicer.
+
+    Attributes:
+        name (str): Specifies the slicer name, should be an existing field name
+            of the given table or pivot table, this setting is required.
+        cell (str): Specifies the left top cell coordinates the position for
+            inserting the slicer, this setting is required.
+        table_sheet (str): Specifies the worksheet name of the table or pivot
+            table, this setting is required.
+        table_name (str): Specifies the name of the table or pivot table, this
+            setting is required.
+        caption (str): Specifies the caption of the slicer, this setting is
+            optional.
+        macro (str): Used for set macro for the slicer, the workbook extension
+            should be XLSM or XLTM.
+        width (int): Specifies the width of the slicer, this setting is
+            optional.
+        height (int): Specifies the height of the slicer, this setting is
+            optional.
+        display_header (Optional[bool]): Specifies if display header of the
+            slicer, this setting is optional, the default setting is display.
+        item_desc (bool): Specifies descending (Z-A) item sorting, this setting
+            is optional, and the default setting is false (represents
+            ascending).
+        format (GraphicOptions): Specifies the format of the slicer, this
+            setting is optional.
+        selected_items (Optional[List[str]]): Option is used to specify the
+            default selected items in a slicer. It is currently only supported
+            for slicers in pivot tables. The selected items must fall within the
+            range of items selected in the pivot table. If the pivot table is
+            created using the add_pivot_table function, the same field must also
+            have its selected item range specified at the time the pivot table
+            is created.
+    """
+
     name: str = ""
     cell: str = ""
     table_sheet: str = ""
@@ -1106,6 +1150,7 @@ class SlicerOptions:
     display_header: Optional[bool] = None
     item_desc: bool = False
     format: GraphicOptions = GraphicOptions
+    selected_items: Optional[List[str]] = None
 
 
 @dataclass

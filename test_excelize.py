@@ -1508,11 +1508,13 @@ class TestExcelize(unittest.TestCase):
                     values="Sheet1!$B$4:$D$4",
                 ),
             ],
-            title=[
-                excelize.RichTextRun(
-                    text="Fruit 3D Clustered Column Chart",
-                )
-            ],
+            title=excelize.ChartTitle(
+                paragraph=[
+                    excelize.RichTextRun(
+                        text="Fruit 3D Clustered Column Chart",
+                    )
+                ],
+            ),
         )
         self.assertIsNone(
             f.add_chart(
@@ -1563,11 +1565,13 @@ class TestExcelize(unittest.TestCase):
                             values="Sheet1!$B$4:$D$4",
                         ),
                     ],
-                    title=[
-                        excelize.RichTextRun(
-                            text="Fruit 3D Clustered Column Chart",
-                        )
-                    ],
+                    title=excelize.ChartTitle(
+                        paragraph=[
+                            excelize.RichTextRun(
+                                text="Fruit 3D Clustered Column Chart",
+                            )
+                        ],
+                    ),
                 ),
             )
         )
@@ -1666,6 +1670,8 @@ class TestExcelize(unittest.TestCase):
                     print_object=False,
                     positioning="oneCell",
                 ),
+                width=140,
+                height=60,
             ),
             excelize.FormControl(
                 cell="A6",
@@ -1686,14 +1692,14 @@ class TestExcelize(unittest.TestCase):
                 text="Option Button 2",
             ),
             excelize.FormControl(
-                cell="D3",
+                cell="D9",
                 type=excelize.FormControlType.FormControlGroupBox,
                 text="Group Box 1",
                 width=140,
                 height=60,
             ),
             excelize.FormControl(
-                cell="A9",
+                cell="A10",
                 type=excelize.FormControlType.FormControlLabel,
                 text="Label 1",
                 width=140,
@@ -2009,31 +2015,32 @@ class TestExcelize(unittest.TestCase):
         ]
         year = [2017, 2018, 2019]
         types = ["Meat", "Dairy", "Beverages", "Produce"]
+        revenue = [3217, 4512, 3891, 4738, 3054, 4265, 3643, 4901, 3378, 4126]
         region = ["East", "West", "North", "South"]
         self.assertIsNone(
             f.set_sheet_row(
-                "Sheet1", "A1", ["Month", "Year", "Type", "Sales", "Region"]
+                "Sheet1", "A1", ["Month", "Year", "Type", "Revenue", "Region"]
             )
         )
         for row in range(2, 32):
             self.assertIsNone(
-                f.set_cell_value("Sheet1", f"A{row}", month[random.randrange(12)])
+                f.set_cell_value("Sheet1", f"A{row}", month[(row - 2) % len(month)])
             )
             self.assertIsNone(
-                f.set_cell_value("Sheet1", f"B{row}", year[random.randrange(3)])
+                f.set_cell_value("Sheet1", f"B{row}", year[(row - 2) % len(year)])
             )
             self.assertIsNone(
-                f.set_cell_value("Sheet1", f"C{row}", types[random.randrange(4)])
+                f.set_cell_value("Sheet1", f"C{row}", types[(row - 2) % len(types)])
             )
             self.assertIsNone(
-                f.set_cell_value("Sheet1", f"D{row}", random.randrange(5000))
+                f.set_cell_value("Sheet1", f"D{row}", revenue[(row - 2) % len(revenue)])
             )
             self.assertIsNone(
-                f.set_cell_value("Sheet1", f"E{row}", region[random.randrange(4)])
+                f.set_cell_value("Sheet1", f"E{row}", region[(row - 2) % len(region)])
             )
         opts = excelize.PivotTableOptions(
             data_range="Sheet1!A1:E31",
-            pivot_table_range="Sheet1!G2:M34",
+            pivot_table_range="Sheet1!G4:M31",
             rows=[
                 excelize.PivotTableField(data="Month", default_subtotal=True),
                 excelize.PivotTableField(data="Year"),
@@ -2044,7 +2051,7 @@ class TestExcelize(unittest.TestCase):
             ],
             data=[
                 excelize.PivotTableField(
-                    data="Sales", name="Summarize", subtotal="Sum"
+                    data="Revenue", name="Summarize", subtotal="Sum"
                 ),
             ],
             row_grand_totals=True,
@@ -2101,8 +2108,12 @@ class TestExcelize(unittest.TestCase):
                 excelize.Shape(
                     cell="G6",
                     type="rect",
-                    line=excelize.ShapeLine(
-                        color="4286F4",
+                    line=excelize.LineOptions(
+                        fill=excelize.Fill(
+                            type="pattern",
+                            color=["4286F4"],
+                            pattern=1,
+                        ),
                         width=1.2,
                     ),
                     fill=excelize.Fill(

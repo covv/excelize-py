@@ -411,10 +411,34 @@ class _FormControl(Structure):
     ]
 
 
+class _LineOptions(Structure):
+    _fields_ = [
+        ("Type", c_uint),
+        ("Dash", c_uint),
+        ("Fill", _Fill),
+        ("Smooth", c_bool),
+        ("Width", c_double),
+    ]
+
+
 class _ChartNumFmt(Structure):
     _fields_ = [
         ("CustomNumFmt", c_char_p),
         ("SourceLinked", c_bool),
+    ]
+
+
+class _ChartTitle(Structure):
+    _fields_ = [
+        ("Fill", _Fill),
+        ("Border", _LineOptions),
+        ("ParagraphLen", c_int),
+        ("Paragraph", POINTER(_RichTextRun)),
+        ("OffsetX", c_int),
+        ("OffsetY", c_int),
+        ("Width", c_int),
+        ("Height", c_int),
+        ("Overlay", c_bool),
     ]
 
 
@@ -436,8 +460,7 @@ class _ChartAxis(Structure):
         ("Font", _Font),
         ("LogBase", c_double),
         ("NumFmt", _ChartNumFmt),
-        ("TitleLen", c_int),
-        ("Title", POINTER(_RichTextRun)),
+        ("Title", _ChartTitle),
     ]
 
 
@@ -456,20 +479,10 @@ class _ChartDimension(Structure):
     ]
 
 
-class _ChartLine(Structure):
-    _fields_ = [
-        ("Type", c_uint),
-        ("Dash", c_uint),
-        ("Fill", _Fill),
-        ("Smooth", c_bool),
-        ("Width", c_double),
-    ]
-
-
 class _ChartUpDownBar(Structure):
     _fields_ = [
         ("Fill", _Fill),
-        ("Border", _ChartLine),
+        ("Border", _LineOptions),
     ]
 
 
@@ -501,7 +514,7 @@ class _ChartLegend(Structure):
 
 class _ChartMarker(Structure):
     _fields_ = [
-        ("Border", _ChartLine),
+        ("Border", _LineOptions),
         ("Fill", _Fill),
         ("Symbol", c_char_p),
         ("Size", c_int),
@@ -523,7 +536,7 @@ class _ChartSeries(Structure):
         ("Sizes", c_char_p),
         ("Fill", _Fill),
         ("Legend", _ChartLegend),
-        ("Line", _ChartLine),
+        ("Line", _LineOptions),
         ("Marker", _ChartMarker),
         ("DataLabel", _ChartDataLabel),
         ("DataLabelPosition", c_uint),
@@ -540,14 +553,13 @@ class _Chart(Structure):
         ("Format", _GraphicOptions),
         ("Dimension", _ChartDimension),
         ("Legend", _ChartLegend),
-        ("TitleLen", c_int),
-        ("Title", POINTER(_RichTextRun)),
+        ("Title", _ChartTitle),
         ("VaryColors", POINTER(c_bool)),
         ("XAxis", _ChartAxis),
         ("YAxis", _ChartAxis),
         ("PlotArea", _ChartPlotArea),
         ("Fill", _Fill),
-        ("Border", _ChartLine),
+        ("Border", _LineOptions),
         ("ShowBlanksAs", c_char_p),
         ("BubbleSize", c_int),
         ("HoleSize", c_int),
@@ -567,6 +579,8 @@ class _PivotTableField(Structure):
         ("Subtotal", c_char_p),
         ("DefaultSubtotal", c_bool),
         ("NumFmt", c_int),
+        ("SelectedItemsLen", c_int),
+        ("SelectedItems", POINTER(POINTER(c_char))),
     ]
 
 
@@ -600,13 +614,8 @@ class _PivotTableOptions(Structure):
         ("FieldPrintTitles", c_bool),
         ("ItemPrintTitles", c_bool),
         ("PivotTableStyleName", c_char_p),
-    ]
-
-
-class _ShapeLine(Structure):
-    _fields_ = [
-        ("Color", c_char_p),
-        ("Width", POINTER(c_double)),
+        ("SelectedItemsLen", c_int),
+        ("SelectedItems", POINTER(POINTER(c_char))),
     ]
 
 
@@ -619,7 +628,7 @@ class _Shape(Structure):
         ("Height", c_uint),
         ("Format", _GraphicOptions),
         ("Fill", _Fill),
-        ("Line", _ShapeLine),
+        ("Line", _LineOptions),
         ("ParagraphLen", c_int),
         ("Paragraph", POINTER(_RichTextRun)),
     ]
@@ -683,6 +692,8 @@ class _SlicerOptions(Structure):
         ("DisplayHeader", POINTER(c_bool)),
         ("ItemDesc", c_bool),
         ("Format", _GraphicOptions),
+        ("SelectedItemsLen", c_int),
+        ("SelectedItems", POINTER(POINTER(c_char))),
     ]
 
 
